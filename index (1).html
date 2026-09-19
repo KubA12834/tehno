@@ -1,0 +1,1505 @@
+<!--
+  LuxTech SPA
+  Один файл, готовый к запуску в браузере.
+  Сохрани как index.html и открой в браузере.
+ 
+  Что внутри:
+  - Hero с анимированным фоном и параллакс-эффектом
+  - Каталог с фильтрами, поиском и сортировкой
+  - Карточки товаров
+  - Квиз-подборщик
+  - Корзина с localStorage, промокодом, доставкой и рассрочкой
+  - Переключение тем
+  - Отзывы-слайдер
+  - Адаптивность, lazy-load, плавные анимации
+-->
+ 
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark light" />
+  <title>LuxTech — Premium Tech Store</title>
+ 
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+ 
+  <!-- Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+ 
+  <style>
+    :root {
+      --bg: #07080c;
+      --bg-elevated: rgba(15, 18, 28, 0.72);
+      --bg-card: rgba(16, 19, 29, 0.78);
+      --bg-glass: rgba(255, 255, 255, 0.06);
+      --text: #f5f7fb;
+      --muted: #9aa4b2;
+      --line: rgba(255,255,255,0.10);
+      --line-strong: rgba(255,255,255,0.16);
+      --accent: #8b5cf6;
+      --accent2: #38bdf8;
+      --success: #22c55e;
+      --danger: #f87171;
+      --shadow: 0 24px 80px rgba(0,0,0,0.45);
+      --shadow-soft: 0 10px 40px rgba(0,0,0,0.20);
+      --radius-xl: 28px;
+      --radius-lg: 22px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+      --container: 1240px;
+      --header-h: 78px;
+    }
+ 
+    [data-theme="light"] {
+      --bg: #f4f7fb;
+      --bg-elevated: rgba(255,255,255,0.78);
+      --bg-card: rgba(255,255,255,0.85);
+      --bg-glass: rgba(255,255,255,0.55);
+      --text: #0c1220;
+      --muted: #5f6b7a;
+      --line: rgba(12,18,32,0.10);
+      --line-strong: rgba(12,18,32,0.16);
+      --shadow: 0 24px 80px rgba(9, 15, 30, 0.12);
+      --shadow-soft: 0 10px 30px rgba(9, 15, 30, 0.08);
+      --accent: #6d5efc;
+      --accent2: #0ea5e9;
+    }
+ 
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(139,92,246,0.20), transparent 28%),
+        radial-gradient(circle at 80% 10%, rgba(56,189,248,0.18), transparent 25%),
+        radial-gradient(circle at bottom right, rgba(99,102,241,0.14), transparent 25%),
+        var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      transition: background-color .35s ease, color .35s ease;
+    }
+ 
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 46px 46px;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,0.25), transparent 70%);
+      opacity: .35;
+    }
+ 
+    a { color: inherit; text-decoration: none; }
+    button, select {
+      font: inherit;
+    }
+ 
+    .container {
+      width: min(100% - 32px, var(--container));
+      margin: 0 auto;
+    }
+ 
+    .glass {
+      background: var(--bg-glass);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+ 
+    .section {
+      padding: 88px 0;
+      position: relative;
+    }
+ 
+    .section-title {
+      font-size: clamp(1.8rem, 3vw, 3rem);
+      line-height: 1.05;
+      margin: 0 0 12px;
+      letter-spacing: -0.04em;
+    }
+ 
+    .section-subtitle {
+      color: var(--muted);
+      max-width: 760px;
+      margin: 0 0 32px;
+      line-height: 1.7;
+    }
+ 
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      height: var(--header-h);
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid transparent;
+      background: color-mix(in srgb, var(--bg) 66%, transparent);
+      backdrop-filter: blur(18px);
+    }
+ 
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      width: min(100% - 24px, var(--container));
+      margin: 0 auto;
+    }
+ 
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-size: 0.82rem;
+    }
+ 
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: 0 18px 40px rgba(139,92,246,0.35);
+    }
+ 
+    .nav {
+      display: none;
+      gap: 26px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+ 
+    .nav a:hover { color: var(--text); }
+ 
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+ 
+    .icon-btn {
+      width: 44px;
+      height: 44px;
+      border: 1px solid var(--line);
+      background: var(--bg-glass);
+      color: var(--text);
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: transform .2s ease, border-color .2s ease, background .2s ease;
+      position: relative;
+    }
+    .icon-btn:hover { transform: translateY(-2px); border-color: var(--line-strong); }
+ 
+    .badge {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 6px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white;
+      font-size: 12px;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 10px 20px rgba(139,92,246,.35);
+    }
+ 
+    .hero {
+      padding: 48px 0 28px;
+      min-height: calc(100vh - var(--header-h));
+      display: grid;
+      align-items: center;
+    }
+ 
+    .hero-grid {
+      display: grid;
+      gap: 28px;
+      grid-template-columns: 1fr;
+    }
+ 
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: var(--bg-glass);
+      color: var(--muted);
+      font-size: 0.88rem;
+      margin-bottom: 18px;
+    }
+ 
+    .hero h1 {
+      font-size: clamp(3rem, 8vw, 6.8rem);
+      line-height: .92;
+      margin: 0;
+      letter-spacing: -0.07em;
+      max-width: 10ch;
+    }
+ 
+    .gradient-text {
+      background: linear-gradient(90deg, #fff, #b6b7ff 35%, #7dd3fc 65%, #c084fc);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+ 
+    [data-theme="light"] .gradient-text {
+      background: linear-gradient(90deg, #0b1220, #4f46e5 35%, #0ea5e9 65%, #7c3aed);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+ 
+    .hero p {
+      color: var(--muted);
+      max-width: 60ch;
+      line-height: 1.8;
+      font-size: 1.05rem;
+      margin: 18px 0 28px;
+    }
+ 
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+ 
+    .btn {
+      border: 0;
+      border-radius: 16px;
+      padding: 14px 18px;
+      cursor: pointer;
+      transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+ 
+    .btn:hover { transform: translateY(-2px); }
+
+    .btn:disabled,
+    .choice:disabled,
+    button:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+ 
+    .btn-primary {
+      color: #fff;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: 0 18px 36px rgba(88, 96, 255, 0.25);
+    }
+ 
+    .btn-secondary {
+      color: var(--text);
+      background: var(--bg-glass);
+      border: 1px solid var(--line);
+    }
+ 
+    .hero-visual {
+      position: relative;
+      min-height: 520px;
+      border-radius: calc(var(--radius-xl) + 10px);
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 35%, rgba(139,92,246,0.26), transparent 40%),
+        radial-gradient(circle at 70% 30%, rgba(56,189,248,0.20), transparent 25%),
+        var(--bg-card);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+    }
+ 
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(18px);
+      opacity: .65;
+      animation: float 10s ease-in-out infinite;
+    }
+    .orb.o1 { width: 220px; height: 220px; background: rgba(139,92,246,.35); top: 10%; left: 8%; }
+    .orb.o2 { width: 180px; height: 180px; background: rgba(56,189,248,.24); bottom: 8%; right: 6%; animation-delay: -3s; }
+ 
+    .device {
+      position: absolute;
+      border-radius: 28px;
+      background: linear-gradient(145deg, rgba(255,255,255,.22), rgba(255,255,255,.04));
+      border: 1px solid rgba(255,255,255,.16);
+      box-shadow: 0 25px 60px rgba(0,0,0,.35);
+      transform-style: preserve-3d;
+      backdrop-filter: blur(8px);
+      transition: transform .1s ease-out;
+      overflow: hidden;
+    }
+    .device.phone { width: 170px; height: 330px; left: 18%; top: 18%; transform: rotate(-18deg); }
+    .device.laptop { width: 320px; height: 210px; right: 10%; top: 17%; transform: rotate(14deg); border-radius: 18px; }
+    .device.tab { width: 210px; height: 280px; left: 42%; top: 28%; transform: rotate(8deg); }
+    .device.watch { width: 110px; height: 140px; right: 22%; bottom: 10%; transform: rotate(10deg); border-radius: 28px; }
+ 
+    .device::before {
+      content: "";
+      position: absolute;
+      inset: 10px;
+      border-radius: inherit;
+      background:
+        linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.02)),
+        radial-gradient(circle at 50% 30%, rgba(255,255,255,.16), transparent 40%);
+      border: 1px solid rgba(255,255,255,.06);
+      z-index: 1;
+    }
+
+    .device img {
+      position: absolute;
+      inset: 10px;
+      width: calc(100% - 20px);
+      height: calc(100% - 20px);
+      object-fit: cover;
+      border-radius: inherit;
+      opacity: .55;
+    }
+ 
+    .floating-panel {
+      position: absolute;
+      left: 16px;
+      bottom: 16px;
+      width: min(420px, calc(100% - 32px));
+      border-radius: 20px;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      background: rgba(10,12,18,.48);
+      border: 1px solid rgba(255,255,255,.10);
+      backdrop-filter: blur(18px);
+    }
+ 
+    .stat {
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.06);
+    }
+    .stat strong { display: block; font-size: 1rem; margin-bottom: 4px; }
+    .stat span { color: var(--muted); font-size: .9rem; }
+ 
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+ 
+    .field, .select {
+      height: 48px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: var(--bg-glass);
+      color: var(--text);
+      padding: 0 14px;
+      outline: none;
+    }
+    .field { flex: 1 1 220px; }
+    .select { flex: 0 1 180px; }
+ 
+    .chip-group {
+      display: flex;
+      gap: 10px;
+      overflow: auto;
+      padding-bottom: 4px;
+      margin-bottom: 18px;
+    }
+ 
+    .chip {
+      border: 1px solid var(--line);
+      background: var(--bg-glass);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 10px 14px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: .2s ease;
+    }
+    .chip.active, .chip:hover {
+      border-color: color-mix(in srgb, var(--accent) 50%, var(--line));
+      background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 22%, transparent), color-mix(in srgb, var(--accent2) 16%, transparent));
+    }
+ 
+    .grid-products {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+ 
+    .card {
+      border-radius: 24px;
+      overflow: hidden;
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-soft);
+      transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+    }
+    .card:hover {
+      transform: translateY(-6px);
+      border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
+      box-shadow: 0 24px 50px rgba(0,0,0,.22);
+    }
+ 
+    .card-media {
+      height: 220px;
+      background:
+        radial-gradient(circle at 50% 30%, rgba(255,255,255,.18), transparent 30%),
+        linear-gradient(135deg, rgba(139,92,246,.35), rgba(56,189,248,.20));
+      position: relative;
+      overflow: hidden;
+    }
+ 
+    .card-media img {
+      width: 76%;
+      height: 76%;
+      object-fit: cover;
+      position: absolute;
+      inset: 12% 12%;
+      border-radius: 18px;
+      box-shadow: 0 20px 50px rgba(0,0,0,.35);
+      background: rgba(255,255,255,.08);
+    }
+ 
+    .card-body {
+      padding: 18px;
+    }
+ 
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+ 
+    .name {
+      font-weight: 800;
+      font-size: 1.05rem;
+      margin: 0 0 6px;
+    }
+ 
+    .meta, .muted { color: var(--muted); }
+    .meta { font-size: .92rem; line-height: 1.5; }
+ 
+    .specs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 14px 0 16px;
+    }
+    .spec {
+      font-size: .82rem;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--line);
+      color: var(--muted);
+    }
+ 
+    .price-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .price {
+      font-size: 1.2rem;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+    }
+ 
+    .add-btn {
+      border: 1px solid var(--line);
+      background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 28%, transparent), color-mix(in srgb, var(--accent2) 20%, transparent));
+      color: var(--text);
+      height: 42px;
+      padding: 0 14px;
+      border-radius: 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+ 
+    .two-col {
+      display: grid;
+      gap: 20px;
+      grid-template-columns: 1fr;
+    }
+ 
+    .quiz, .benefits, .reviews, .footer, .cart-panel {
+      border-radius: 28px;
+      border: 1px solid var(--line);
+      background: var(--bg-card);
+      box-shadow: var(--shadow-soft);
+    }
+ 
+    .quiz {
+      padding: 24px;
+    }
+ 
+    .quiz-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+ 
+    .progress {
+      height: 10px;
+      background: rgba(255,255,255,.08);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 18px;
+      border: 1px solid var(--line);
+    }
+    .progress > div {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      transition: width .35s ease;
+    }
+ 
+    .quiz-card {
+      min-height: 240px;
+      display: grid;
+      gap: 14px;
+      align-content: start;
+    }
+ 
+    .choice-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(1, minmax(0,1fr));
+    }
+ 
+    .choice {
+      text-align: left;
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      cursor: pointer;
+      transition: .2s ease;
+    }
+    .choice:hover, .choice.selected {
+      border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+      transform: translateY(-2px);
+    }
+    .choice.selected {
+      background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 22%, transparent), color-mix(in srgb, var(--accent2) 16%, transparent));
+    }
+ 
+    .quiz-nav {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 18px;
+    }
+ 
+    .results {
+      margin-top: 18px;
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+ 
+    .result-card {
+      padding: 16px;
+      border-radius: 20px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--line);
+    }
+ 
+    .cart-panel {
+      position: sticky;
+      top: 96px;
+      padding: 20px;
+    }
+ 
+    .cart-items {
+      display: grid;
+      gap: 12px;
+      margin: 14px 0 18px;
+      max-height: 340px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+ 
+    .cart-item {
+      display: grid;
+      grid-template-columns: 64px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      border-radius: 18px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--line);
+    }
+ 
+    .cart-item img {
+      width: 64px;
+      height: 64px;
+      object-fit: cover;
+      border-radius: 14px;
+      background: rgba(255,255,255,.08);
+    }
+ 
+    .qty {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+ 
+    .mini-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: var(--bg-glass);
+      color: var(--text);
+      cursor: pointer;
+    }
+ 
+    .calc {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+ 
+    .calc-row {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      gap: 12px;
+    }
+    .calc-row strong { color: var(--text); }
+
+    .promo-msg {
+      font-size: .82rem;
+      min-height: 18px;
+      margin-top: -6px;
+    }
+    .promo-msg.ok { color: var(--success); }
+    .promo-msg.err { color: var(--danger); }
+ 
+    .footer {
+      padding: 28px;
+    }
+ 
+    .footer-grid {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: 1fr;
+    }
+ 
+    .socials {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+ 
+    .social {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      display: grid;
+      place-items: center;
+      background: var(--bg-glass);
+    }
+ 
+    .review-slider {
+      position: relative;
+      overflow: hidden;
+    }
+ 
+    .review-track {
+      display: flex;
+      transition: transform .5s ease;
+    }
+ 
+    .review {
+      min-width: 100%;
+      padding: 24px;
+      border-radius: 24px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.04);
+    }
+ 
+    .review p { line-height: 1.8; color: var(--text); font-size: 1.02rem; }
+    .review .who { display: flex; gap: 12px; align-items: center; margin-top: 18px; color: var(--muted); }
+    .avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+ 
+    .fade-in {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity .7s ease, transform .7s ease;
+    }
+    .fade-in.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+ 
+    @keyframes float {
+      0%,100% { transform: translateY(0px) translateX(0px); }
+      50% { transform: translateY(-14px) translateX(8px); }
+    }
+ 
+    @media (min-width: 760px) {
+      .nav { display: flex; }
+      .hero-grid { grid-template-columns: 1.02fr .98fr; gap: 40px; }
+      .grid-products { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .choice-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .results { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .footer-grid { grid-template-columns: 1.5fr 1fr 1fr; }
+      .two-col { grid-template-columns: 1.15fr .85fr; }
+    }
+ 
+    @media (min-width: 1100px) {
+      .grid-products { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .choice-grid { grid-template-columns: repeat(4, minmax(0,1fr)); }
+      .results { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    }
+ 
+    /* Mobile cart drawer */
+    .cart-drawer-toggle {
+      display: none;
+    }
+    @media (max-width: 1099px) {
+      .cart-panel {
+        position: fixed;
+        inset: auto 16px 16px 16px;
+        top: auto;
+        z-index: 50;
+        transform: translateY(110%);
+        transition: transform .35s ease;
+        max-height: 85vh;
+        overflow: auto;
+      }
+      .cart-panel.open { transform: translateY(0); }
+      .cart-drawer-toggle {
+        display: inline-flex;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <a class="brand" href="#top">
+        <span class="brand-mark"><i data-lucide="sparkles" width="18" height="18"></i></span>
+        <span>LuxTech</span>
+      </a>
+ 
+      <nav class="nav">
+        <a href="#catalog">Каталог</a>
+        <a href="#quiz">Квиз</a>
+        <a href="#benefits">Преимущества</a>
+        <a href="#reviews">Отзывы</a>
+      </nav>
+ 
+      <div class="header-actions">
+        <button class="icon-btn cart-drawer-toggle" id="cartToggle" aria-label="Открыть корзину">
+          <i data-lucide="shopping-bag" width="18" height="18"></i>
+          <span class="badge" id="cartCount">0</span>
+        </button>
+        <button class="icon-btn" id="themeToggle" aria-label="Переключить тему">
+          <i data-lucide="moon-star" width="18" height="18"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+ 
+  <main id="top">
+    <section class="hero container">
+      <div class="hero-grid">
+        <div class="fade-in">
+          <div class="eyebrow"><i data-lucide="cpu"></i> Premium tech curated for performance</div>
+          <h1>Техника, которая выглядит как <span class="gradient-text">флагман</span> и работает так же.</h1>
+          <p>
+            Смартфоны, ноутбуки, планшеты, наушники и умные часы в единой премиальной витрине.
+            Подбор, корзина, промокоды и персональные рекомендации — всё без бэкенда, быстро и чисто.
+          </p>
+          <div class="hero-actions">
+            <a href="#catalog" class="btn btn-primary"><i data-lucide="arrow-down-right"></i> Смотреть каталог</a>
+            <a href="#quiz" class="btn btn-secondary"><i data-lucide="wand-sparkles"></i> Пройти квиз</a>
+          </div>
+        </div>
+ 
+        <div class="hero-visual" id="heroVisual">
+          <div class="orb o1"></div>
+          <div class="orb o2"></div>
+          <div class="device phone" data-depth="0.16" data-rotate="-18"></div>
+          <div class="device laptop" data-depth="0.08" data-rotate="14"></div>
+          <div class="device tab" data-depth="0.12" data-rotate="8"></div>
+          <div class="device watch" data-depth="0.22" data-rotate="10"></div>
+          <div class="floating-panel">
+            <div class="stat"><strong>120Hz</strong><span>визуальная плавность</span></div>
+            <div class="stat"><strong>5 категорий</strong><span>в одном каталоге</span></div>
+            <div class="stat"><strong>localStorage</strong><span>корзина и тема</span></div>
+            <div class="stat"><strong>Quiz engine</strong><span>персональный подбор</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+ 
+    <section id="catalog" class="section container">
+      <h2 class="section-title fade-in">Каталог</h2>
+      <p class="section-subtitle fade-in">
+        Фильтруйте по категории, бренду и цене, сортируйте, сравнивайте и добавляйте в корзину.
+      </p>
+ 
+      <div class="toolbar fade-in">
+        <input class="field" id="search" placeholder="Поиск по названию или бренду" />
+        <select class="select" id="brandFilter">
+          <option value="all">Все бренды</option>
+        </select>
+        <select class="select" id="sortBy">
+          <option value="popular">Сначала популярные</option>
+          <option value="price-asc">Цена: по возрастанию</option>
+          <option value="price-desc">Цена: по убыванию</option>
+          <option value="newest">Сначала новинки</option>
+        </select>
+        <select class="select" id="priceFilter">
+          <option value="all">Любая цена</option>
+          <option value="0-1000">до $1,000</option>
+          <option value="1000-2000">$1,000–$2,000</option>
+          <option value="2000+">$2,000+</option>
+        </select>
+      </div>
+ 
+      <div class="chip-group fade-in" id="categoryChips"></div>
+      <div class="grid-products" id="products"></div>
+    </section>
+ 
+    <section id="quiz" class="section container">
+      <div class="two-col">
+        <div class="quiz fade-in">
+          <h2 class="section-title" style="margin-bottom: 10px;">Квиз-подборщик</h2>
+          <p class="section-subtitle" style="margin-bottom: 16px;">
+            Ответьте на несколько вопросов — и мы подберём 2–3 лучших устройства под ваши задачи.
+          </p>
+ 
+          <div class="quiz-head">
+            <div>
+              <div class="muted" id="quizStepText">Шаг 1 из 3</div>
+              <strong id="quizQuestion">Для каких задач нужна техника?</strong>
+            </div>
+            <button class="icon-btn" id="quizReset" aria-label="Сбросить квиз">
+              <i data-lucide="rotate-ccw" width="18" height="18"></i>
+            </button>
+          </div>
+ 
+          <div class="progress"><div id="quizProgress"></div></div>
+          <div class="quiz-card">
+            <div class="choice-grid" id="quizChoices"></div>
+            <div class="results" id="quizResults" style="display:none;"></div>
+          </div>
+ 
+          <div class="quiz-nav">
+            <button class="btn btn-secondary" id="quizBack"><i data-lucide="arrow-left"></i> Назад</button>
+            <button class="btn btn-primary" id="quizNext">Далее <i data-lucide="arrow-right"></i></button>
+          </div>
+        </div>
+ 
+        <aside class="cart-panel glass fade-in" id="cartPanel">
+          <div class="quiz-head" style="margin-bottom: 4px;">
+            <div>
+              <h3 style="margin:0;">Корзина</h3>
+              <div class="muted" id="cartHint">Добавьте товары из каталога</div>
+            </div>
+            <button class="icon-btn cart-drawer-toggle" id="cartClose" aria-label="Закрыть корзину">
+              <i data-lucide="x" width="18" height="18"></i>
+            </button>
+          </div>
+ 
+          <div class="cart-items" id="cartItems"></div>
+ 
+          <div class="calc">
+            <div class="field" style="display:flex;align-items:center;gap:10px;">
+              <i data-lucide="ticket-percent"></i>
+              <input id="promo" class="field" style="border:0;background:transparent;padding:0;height:auto;" placeholder="Промокод: SALE10" />
+              <button class="btn btn-secondary" id="applyPromo" style="padding:10px 14px;">Применить</button>
+            </div>
+            <div class="promo-msg" id="promoMsg"></div>
+ 
+            <div class="calc-row"><span>Сумма товаров</span><strong id="subtotal">$0</strong></div>
+            <div class="calc-row"><span>Скидка</span><strong id="discount">-$0</strong></div>
+            <div class="calc-row"><span>Доставка</span><strong id="shipping">$0</strong></div>
+            <div class="calc-row"><span>Итого</span><strong id="total">$0</strong></div>
+            <div class="calc-row"><span>Рассрочка 0-0-12</span><strong id="installment">$0/мес</strong></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+ 
+    <section id="benefits" class="section container">
+      <h2 class="section-title fade-in">Почему мы</h2>
+      <p class="section-subtitle fade-in">Премиальный сервис, умный подбор и визуальный опыт уровня flagship-презентации.</p>
+      <div class="grid-products">
+        <div class="card fade-in"><div class="card-body"><h3 class="name">Отбор без компромиссов</h3><p class="meta">Только актуальные устройства с сильными характеристиками и выразительным дизайном.</p></div></div>
+        <div class="card fade-in"><div class="card-body"><h3 class="name">Персональный подбор</h3><p class="meta">Квиз учитывает сценарии, бюджет, батарею, камеру, вес и производительность.</p></div></div>
+        <div class="card fade-in"><div class="card-body"><h3 class="name">Плавный UX</h3><p class="meta">Анимации, localStorage, сортировка, фильтры и корзина работают без бэкенда.</p></div></div>
+      </div>
+    </section>
+ 
+    <section id="reviews" class="section container">
+      <h2 class="section-title fade-in">Отзывы</h2>
+      <p class="section-subtitle fade-in">Слайдер автоматически переключается, но можно листать вручную.</p>
+      <div class="review-slider fade-in">
+        <div class="review-track" id="reviewTrack"></div>
+      </div>
+      <div class="hero-actions" style="margin-top:14px;">
+        <button class="btn btn-secondary" id="prevReview"><i data-lucide="arrow-left"></i> Назад</button>
+        <button class="btn btn-secondary" id="nextReview">Вперёд <i data-lucide="arrow-right"></i></button>
+      </div>
+    </section>
+ 
+    <footer class="section container" style="padding-top: 0;">
+      <div class="footer fade-in">
+        <div class="footer-grid">
+          <div>
+            <div class="brand" style="margin-bottom: 14px;">
+              <span class="brand-mark"><i data-lucide="sparkles" width="18" height="18"></i></span>
+              <span>LuxTech</span>
+            </div>
+            <p class="muted" style="max-width: 48ch; line-height: 1.8;">
+              Премиальный магазин техники с тщательно выстроенным UI, честной интерактивностью и локальными данными.
+            </p>
+            <div class="socials">
+              <a class="social" href="#" aria-label="Telegram"><i data-lucide="send"></i></a>
+              <a class="social" href="#" aria-label="Instagram"><i data-lucide="instagram"></i></a>
+              <a class="social" href="#" aria-label="YouTube"><i data-lucide="youtube"></i></a>
+              <a class="social" href="#" aria-label="X"><i data-lucide="twitter"></i></a>
+            </div>
+          </div>
+          <div>
+            <h4>Контакты</h4>
+            <p class="muted">hello@luxtech.store<br>+1 (800) 555-0199</p>
+          </div>
+          <div>
+            <h4>Соцсети</h4>
+            <p class="muted">Telegram / Instagram / YouTube / X</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </main>
+ 
+  <script>
+    const PLACEHOLDER_IMG = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+        <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#8b5cf6"/><stop offset="100%" stop-color="#38bdf8"/>
+        </linearGradient></defs>
+        <rect width="400" height="400" fill="url(#g)" opacity="0.35"/>
+        <text x="50%" y="50%" fill="#ffffff" font-family="sans-serif" font-size="22" text-anchor="middle" dominant-baseline="middle">Фото недоступно</text>
+      </svg>`
+    );
+
+    const productsData = [
+      { id: 1, category: 'smartphone', brand: 'Apple', name: 'iPhone 16 Pro', price: 1299, popularity: 98, year: 2026, img: 'https://images.unsplash.com/photo-1592286927505-1def25115481?auto=format&fit=crop&w=900&q=80', specs: ['A18 Pro', '48MP', 'Titanium', 'Wi‑Fi 7'], desc: 'Для камеры, скорости и экосистемы.' },
+      { id: 2, category: 'laptop', brand: 'Apple', name: 'MacBook Pro 16 M4', price: 2499, popularity: 97, year: 2026, img: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=900&q=80', specs: ['M4', 'Liquid Retina XDR', '18h battery', 'Studio sound'], desc: 'Работа, монтаж, код и тяжёлые задачи.' },
+      { id: 3, category: 'tablet', brand: 'Samsung', name: 'Galaxy Tab S10 Ultra', price: 1199, popularity: 91, year: 2025, img: 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?auto=format&fit=crop&w=900&q=80', specs: ['14.6"', 'S Pen', 'AMOLED', 'Dex'], desc: 'Учёба, заметки и мультитаскинг.' },
+      { id: 4, category: 'headphones', brand: 'Sony', name: 'WH-1000XM6', price: 399, popularity: 94, year: 2025, img: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?auto=format&fit=crop&w=900&q=80', specs: ['ANC', '360 Audio', '40h', 'Multipoint'], desc: 'Путешествия и тишина в любом месте.' },
+      { id: 5, category: 'watch', brand: 'Apple', name: 'Watch Series 11', price: 499, popularity: 89, year: 2026, img: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80', specs: ['Health', 'GPS', 'Always-On', 'Sapphire'], desc: 'Здоровье, спорт и уведомления.' },
+      { id: 6, category: 'smartphone', brand: 'Samsung', name: 'Galaxy S26 Ultra', price: 1399, popularity: 95, year: 2026, img: 'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?auto=format&fit=crop&w=900&q=80', specs: ['200MP', 'S Pen', 'LTPO', '120Hz'], desc: 'Камера, экран и мощность.' },
+    ];
+ 
+    const categories = ['all', 'smartphone', 'laptop', 'tablet', 'headphones', 'watch'];
+
+    // --- БЕЗОПАСНАЯ РАБОТА С localStorage (Safari private mode и т.п. не должны ронять страницу) ---
+    function safeGet(key, fallback) {
+      try { return localStorage.getItem(key) ?? fallback; }
+      catch (e) { return fallback; }
+    }
+    function safeSet(key, value) {
+      try { localStorage.setItem(key, value); }
+      catch (e) { /* хранилище недоступно — просто работаем в памяти */ }
+    }
+
+    let cart = [];
+    try { cart = JSON.parse(safeGet('luxtech-cart', '[]')); if (!Array.isArray(cart)) cart = []; }
+    catch (e) { cart = []; }
+
+    let theme = safeGet('luxtech-theme', null) || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+    let promoCode = safeGet('luxtech-promo', '');
+    let currentCategory = 'all';
+
+    // --- ИНИЦИАЛИЗАЦИЯ И ТЕМА ---
+    function applyTheme(newTheme) {
+      theme = newTheme;
+      document.documentElement.setAttribute('data-theme', theme);
+      safeSet('luxtech-theme', theme);
+      updateThemeIcon();
+    }
+
+    function updateThemeIcon() {
+      const btn = document.getElementById('themeToggle');
+      btn.innerHTML = `<i data-lucide="${theme === 'dark' ? 'sun' : 'moon-star'}" width="18" height="18"></i>`;
+      if (window.lucide) lucide.createIcons();
+    }
+
+    applyTheme(theme);
+
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      applyTheme(theme === 'dark' ? 'light' : 'dark');
+    });
+
+    // --- КАТАЛОГ И ФИЛЬТРЫ ---
+    function renderCategoryChips() {
+      const container = document.getElementById('categoryChips');
+      const labels = {
+        all: 'Все',
+        smartphone: 'Смартфоны',
+        laptop: 'Ноутбуки',
+        tablet: 'Планшеты',
+        headphones: 'Наушники',
+        watch: 'Часы'
+      };
+
+      container.innerHTML = categories.map(cat => `
+        <button class="chip ${cat === currentCategory ? 'active' : ''}" data-cat="${cat}">
+          ${labels[cat] || cat}
+        </button>
+      `).join('');
+
+      container.querySelectorAll('.chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+          currentCategory = btn.dataset.cat;
+          renderCategoryChips();
+          renderProducts();
+        });
+      });
+    }
+
+    function initBrandOptions() {
+      const brandSelect = document.getElementById('brandFilter');
+      const brands = ['all', ...new Set(productsData.map(p => p.brand))];
+      brandSelect.innerHTML = brands.map(b => `<option value="${b}">${b === 'all' ? 'Все бренды' : b}</option>`).join('');
+    }
+
+    function renderProducts() {
+      const container = document.getElementById('products');
+      const search = document.getElementById('search').value.toLowerCase();
+      const brand = document.getElementById('brandFilter').value;
+      const price = document.getElementById('priceFilter').value;
+      const sort = document.getElementById('sortBy').value;
+
+      let filtered = productsData.filter(p => {
+        const matchesCategory = currentCategory === 'all' || p.category === currentCategory;
+        const matchesSearch = p.name.toLowerCase().includes(search) || p.brand.toLowerCase().includes(search);
+        const matchesBrand = brand === 'all' || p.brand === brand;
+
+        let matchesPrice = true;
+        if (price === '0-1000') matchesPrice = p.price <= 1000;
+        else if (price === '1000-2000') matchesPrice = p.price > 1000 && p.price <= 2000;
+        else if (price === '2000+') matchesPrice = p.price > 2000;
+
+        return matchesCategory && matchesSearch && matchesBrand && matchesPrice;
+      });
+
+      if (sort === 'popular') filtered.sort((a, b) => b.popularity - a.popularity);
+      if (sort === 'price-asc') filtered.sort((a, b) => a.price - b.price);
+      if (sort === 'price-desc') filtered.sort((a, b) => b.price - a.price);
+      if (sort === 'newest') filtered.sort((a, b) => b.year - a.year);
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="muted" style="grid-column: 1/-1; text-align: center; padding: 40px;">Товары не найдены</div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(p => `
+        <article class="card">
+          <div class="card-media">
+            <img src="${p.img}" alt="${p.name}" loading="lazy" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}';" />
+          </div>
+          <div class="card-body">
+            <div class="card-top">
+              <span class="muted">${p.brand}</span>
+              <span class="muted">${p.year}</span>
+            </div>
+            <h3 class="name">${p.name}</h3>
+            <p class="meta">${p.desc}</p>
+            <div class="specs">
+              ${p.specs.map(s => `<span class="spec">${s}</span>`).join('')}
+            </div>
+            <div class="price-row">
+              <div class="price">$${p.price.toLocaleString()}</div>
+              <button class="add-btn" onclick="addToCart(${p.id})">
+                <i data-lucide="plus" width="16" height="16"></i> В корзину
+              </button>
+            </div>
+          </div>
+        </article>
+      `).join('');
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    ['search', 'brandFilter', 'priceFilter', 'sortBy'].forEach(id => {
+      document.getElementById(id).addEventListener('input', renderProducts);
+    });
+
+    // --- КОРЗИНА И LOCALSTORAGE ---
+    window.addToCart = function(id) {
+      const item = cart.find(i => i.id === id);
+      if (item) {
+        item.qty += 1;
+      } else {
+        cart.push({ id, qty: 1 });
+      }
+      saveCart();
+      updateCart();
+    };
+
+    function saveCart() {
+      safeSet('luxtech-cart', JSON.stringify(cart));
+    }
+
+    function updateCart() {
+      const cartItemsContainer = document.getElementById('cartItems');
+      const totalCount = cart.reduce((acc, item) => acc + item.qty, 0);
+      document.getElementById('cartCount').textContent = totalCount;
+
+      if (cart.length === 0) {
+        cartItemsContainer.innerHTML = `<div class="muted" style="text-align:center; padding: 20px 0;">Корзина пуста</div>`;
+        document.getElementById('cartHint').textContent = 'Добавьте товары из каталога';
+      } else {
+        document.getElementById('cartHint').textContent = `Выбрано товаров: ${totalCount}`;
+        cartItemsContainer.innerHTML = cart.map(item => {
+          const product = productsData.find(p => p.id === item.id);
+          if (!product) return '';
+          return `
+            <div class="cart-item">
+              <img src="${product.img}" alt="${product.name}" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}';" />
+              <div>
+                <strong style="display:block; font-size:.95rem;">${product.name}</strong>
+                <span class="muted" style="font-size:.85rem;">$${product.price}</span>
+              </div>
+              <div class="qty">
+                <button class="mini-btn" onclick="changeQty(${item.id}, -1)" aria-label="Уменьшить количество">-</button>
+                <span>${item.qty}</span>
+                <button class="mini-btn" onclick="changeQty(${item.id}, 1)" aria-label="Увеличить количество">+</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Подсчёт итогов
+      let subtotal = cart.reduce((acc, item) => {
+        const product = productsData.find(p => p.id === item.id);
+        return acc + (product ? product.price * item.qty : 0);
+      }, 0);
+
+      let discount = promoCode.trim().toUpperCase() === 'SALE10' ? Math.round(subtotal * 0.1) : 0;
+      let shipping = subtotal > 0 ? (subtotal > 2000 ? 0 : 20) : 0;
+      let total = subtotal - discount + shipping;
+      let installment = total > 0 ? Math.round(total / 12) : 0;
+
+      document.getElementById('subtotal').textContent = `$${subtotal.toLocaleString()}`;
+      document.getElementById('discount').textContent = `-$${discount.toLocaleString()}`;
+      document.getElementById('shipping').textContent = shipping === 0 && subtotal > 0 ? 'Бесплатно' : `$${shipping}`;
+      document.getElementById('total').textContent = `$${total.toLocaleString()}`;
+      document.getElementById('installment').textContent = `$${installment}/мес`;
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    window.changeQty = function(id, delta) {
+      const item = cart.find(i => i.id === id);
+      if (item) {
+        item.qty += delta;
+        if (item.qty <= 0) {
+          const index = cart.indexOf(item);
+          cart.splice(index, 1);
+        }
+        saveCart();
+        updateCart();
+      }
+    };
+
+    // Промокод: подставляем сохранённое значение и даём внятную обратную связь
+    const promoInput = document.getElementById('promo');
+    const promoMsg = document.getElementById('promoMsg');
+    promoInput.value = promoCode;
+
+    document.getElementById('applyPromo').addEventListener('click', () => {
+      const val = promoInput.value.trim();
+      promoCode = val;
+      safeSet('luxtech-promo', promoCode);
+      updateCart();
+
+      if (!val) {
+        promoMsg.textContent = '';
+        promoMsg.className = 'promo-msg';
+      } else if (val.toUpperCase() === 'SALE10') {
+        promoMsg.textContent = 'Промокод применён: скидка 10%';
+        promoMsg.className = 'promo-msg ok';
+      } else {
+        promoMsg.textContent = 'Промокод не найден';
+        promoMsg.className = 'promo-msg err';
+      }
+    });
+
+    promoInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('applyPromo').click();
+    });
+
+    // Мобильная шторка корзины
+    const cartPanel = document.getElementById('cartPanel');
+    document.getElementById('cartToggle')?.addEventListener('click', () => cartPanel.classList.toggle('open'));
+    document.getElementById('cartClose')?.addEventListener('click', () => cartPanel.classList.remove('open'));
+
+    // --- КВИЗ-ПОДБОРЩИК ---
+    const quizQuestions = [
+      {
+        question: 'Для каких задач нужна техника?',
+        options: [
+          { label: 'Работа, код, видеомонтаж', category: 'laptop' },
+          { label: 'Мобильность, фото, социальные сети', category: 'smartphone' },
+          { label: 'Учёба, чтение, рисование', category: 'tablet' },
+          { label: 'Музыка, тишина в поездках', category: 'headphones' }
+        ]
+      },
+      {
+        question: 'Какой приоритет при выборе?',
+        options: [
+          { label: 'Максимальная производительность' },
+          { label: 'Автономность и батарея' },
+          { label: 'Качество камеры и экрана' },
+          { label: 'Компактность и лёгкость' }
+        ]
+      },
+      {
+        question: 'Предпочитаемая экосистема:',
+        options: [
+          { label: 'Apple (iOS / macOS)' },
+          { label: 'Android / Windows' },
+          { label: 'Не имеет значения' }
+        ]
+      }
+    ];
+
+    let currentStep = 0;
+    let selectedAnswers = [];
+
+    function renderQuiz() {
+      const stepText = document.getElementById('quizStepText');
+      const questionEl = document.getElementById('quizQuestion');
+      const choicesEl = document.getElementById('quizChoices');
+      const progressEl = document.getElementById('quizProgress');
+      const resultsEl = document.getElementById('quizResults');
+      const nextBtn = document.getElementById('quizNext');
+      const backBtn = document.getElementById('quizBack');
+
+      if (currentStep < quizQuestions.length) {
+        resultsEl.style.display = 'none';
+        choicesEl.style.display = 'grid';
+        nextBtn.style.display = 'inline-flex';
+
+        stepText.textContent = `Шаг ${currentStep + 1} из ${quizQuestions.length}`;
+        questionEl.textContent = quizQuestions[currentStep].question;
+        progressEl.style.width = `${((currentStep + 1) / quizQuestions.length) * 100}%`;
+
+        choicesEl.innerHTML = quizQuestions[currentStep].options.map((opt, i) => `
+          <button class="choice ${selectedAnswers[currentStep] === i ? 'selected' : ''}" onclick="selectQuizOption(${i})">
+            ${opt.label}
+          </button>
+        `).join('');
+
+        backBtn.style.visibility = currentStep === 0 ? 'hidden' : 'visible';
+        nextBtn.disabled = selectedAnswers[currentStep] === undefined;
+        nextBtn.textContent = '';
+        nextBtn.innerHTML = currentStep === quizQuestions.length - 1
+          ? 'Показать результат <i data-lucide="arrow-right"></i>'
+          : 'Далее <i data-lucide="arrow-right"></i>';
+      } else {
+        // Показ результатов
+        stepText.textContent = 'Результаты подбора';
+        questionEl.textContent = 'Вот устройства, которые идеально вам подойдут:';
+        choicesEl.style.display = 'none';
+        resultsEl.style.display = 'grid';
+        nextBtn.style.display = 'none';
+        backBtn.style.visibility = 'visible';
+
+        // Логика рекомендации
+        const preferredCat = quizQuestions[0].options[selectedAnswers[0]]?.category;
+        let recommended = productsData.filter(p => !preferredCat || p.category === preferredCat).slice(0, 3);
+        if (recommended.length === 0) recommended = productsData.slice(0, 3);
+
+        resultsEl.innerHTML = recommended.map(p => `
+          <div class="result-card">
+            <strong style="display:block;margin-bottom:6px;">${p.name}</strong>
+            <p class="muted" style="font-size:.88rem;margin:0 0 10px;">${p.desc}</p>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span class="price" style="font-size:1rem;">$${p.price}</span>
+              <button class="add-btn" onclick="addToCart(${p.id})">Добавить</button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    window.selectQuizOption = function(idx) {
+      selectedAnswers[currentStep] = idx;
+      renderQuiz();
+    };
+
+    document.getElementById('quizNext').addEventListener('click', () => {
+      if (currentStep < quizQuestions.length && selectedAnswers[currentStep] !== undefined) {
+        currentStep++;
+        renderQuiz();
+      }
+    });
+
+    document.getElementById('quizBack').addEventListener('click', () => {
+      if (currentStep > 0) {
+        currentStep--;
+        renderQuiz();
+      }
+    });
+
+    document.getElementById('quizReset').addEventListener('click', () => {
+      currentStep = 0;
+      selectedAnswers = [];
+      renderQuiz();
+    });
+
+    // --- СЛАЙДЕР ОТЗЫВОВ ---
+    const reviewsData = [
+      { name: 'Алексей Р.', text: 'Шикарный сервис! Подобрал MacBook Pro через квиз — действительно точное попадание под задачи монтажа.', role: 'Видеомонтажёр', avatar: 'https://i.pravatar.cc/150?img=12' },
+      { name: 'Елена М.', text: 'Доставка за пару часов, всё упаковано идеально. Корзина на сайте работает мгновенно.', role: 'Дизайнер', avatar: 'https://i.pravatar.cc/150?img=47' },
+      { name: 'Дмитрий В.', text: 'Взял iPhone 16 Pro и наушники Sony. Топовый визуал у сайта и очень удобный каталог.', role: 'Предприниматель', avatar: 'https://i.pravatar.cc/150?img=33' }
+    ];
+
+    let currentReview = 0;
+    function renderReviews() {
+      const track = document.getElementById('reviewTrack');
+      track.innerHTML = reviewsData.map(r => `
+        <div class="review">
+          <p>«${r.text}»</p>
+          <div class="who">
+            <img class="avatar" src="${r.avatar}" alt="${r.name}" loading="lazy" onerror="this.onerror=null;this.removeAttribute('src');" />
+            <div>
+              <strong>${r.name}</strong>
+              <div style="font-size:.85rem;">${r.role}</div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateReviewSlider() {
+      const track = document.getElementById('reviewTrack');
+      track.style.transform = `translateX(-${currentReview * 100}%)`;
+    }
+
+    document.getElementById('nextReview').addEventListener('click', () => {
+      currentReview = (currentReview + 1) % reviewsData.length;
+      updateReviewSlider();
+    });
+
+    document.getElementById('prevReview').addEventListener('click', () => {
+      currentReview = (currentReview - 1 + reviewsData.length) % reviewsData.length;
+      updateReviewSlider();
+    });
+
+    let reviewTimer = setInterval(() => {
+      currentReview = (currentReview + 1) % reviewsData.length;
+      updateReviewSlider();
+    }, 6000);
+
+    // Пауза автопрокрутки при наведении, чтобы не мешать чтению
+    const reviewSlider = document.querySelector('.review-slider');
+    reviewSlider?.addEventListener('mouseenter', () => clearInterval(reviewTimer));
+    reviewSlider?.addEventListener('mouseleave', () => {
+      reviewTimer = setInterval(() => {
+        currentReview = (currentReview + 1) % reviewsData.length;
+        updateReviewSlider();
+      }, 6000);
+    });
+
+    // --- ANIMATIONS & PARALLAX ---
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('show');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+    // Параллакс эффекты в Hero visual (сохраняем исходный наклон каждого устройства)
+    const heroVisual = document.getElementById('heroVisual');
+    if (heroVisual) {
+      heroVisual.addEventListener('mousemove', (e) => {
+        const rect = heroVisual.getBoundingClientRect();
+        const x = e.clientX - rect.left - rect.width / 2;
+        const y = e.clientY - rect.top - rect.height / 2;
+
+        heroVisual.querySelectorAll('.device').forEach(dev => {
+          const depth = parseFloat(dev.dataset.depth || 0.1);
+          const rotate = parseFloat(dev.dataset.rotate || 0);
+          dev.style.transform = `translate3d(${x * depth}px, ${y * depth}px, 0px) rotate(${rotate}deg)`;
+        });
+      });
+
+      heroVisual.addEventListener('mouseleave', () => {
+        heroVisual.querySelectorAll('.device').forEach(dev => {
+          dev.style.transform = '';
+        });
+      });
+    }
+
+    // --- СТАРТ ---
+    renderCategoryChips();
+    initBrandOptions();
+    renderProducts();
+    updateCart();
+    renderQuiz();
+    renderReviews();
+  </script>
+</body>
+</html>
